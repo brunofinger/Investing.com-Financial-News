@@ -1,37 +1,65 @@
 from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
 from concurrent.futures import ThreadPoolExecutor
+from os import path, makedirs
 
 
+class Crawler:
 
-def create_text_file(name, content, path):
-	with open(f"{path}{name}.txt", "w") as file:
-		file.write(content)
+    def __init__(self, url,  max_workers, path, total_pages) -> None:
+        self.url = url if path.endswith('/') else url + '/'
+        self.max_workers = max_workers
+        self.path = path if path.endswith('/') else path + '/'
+        self.total_pages = total_pages
 
-def pageSource(url):
-	headers={'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:108.0) Gecko/20100101 Firefox/108.0'}
-	req = Request(url,headers=headers)
-	res = urlopen(req)
-	print(url, res.getcode())
-	return str(BeautifulSoup(res, 'html.parser'))
+    def create_folder(self, overwrite = False, folder_name = None):
+        if not folder_name:
+            folder_name = self.url.replace('/', '_').split('com')[-1][1:] + '/'
 
-def create_tasks(urls):
-    return [url.format(i) for url, n in urls.items() for i in range(1, n+1)]
+        folder_name =self.path + folder_name + '/'
+        print(folder_name)
+        if not path.exists(folder_name):
+            makedirs(folder_name)
+            self.path = folder_name
+            return folder_name
+        elif overwrite:
+            self.path = folder_name
+            return folder_name
+        else:
+            raise AttributeError('Folder already exits in this path')
 
-def handler(url):
-	create_text_file(content= pageSource(url),
-                    name = '_'.join(url.split('/')[3:]),
-                    path = '/home/finger/Documents/investing_news/')
+    def pageSource(self, url):
+        headers={'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:108.0) Gecko/20100101 Firefox/108.0'}
+        req = Request(url,headers=headers)
+        res = urlopen(req)
+        print(url, res.getcode())
+        return str(BeautifulSoup(res, 'html.parser'))
 
-def main():
-    urls = {'https://www.investing.com/news/cryptocurrency-news/{}' : 2,
-            'https://www.investing.com/crypto/bitcoin/news/{}' : 2}
+    def create_tasks(self):
+        url = self.url + '{}' if self.url.endswith('/') else self.url + '/{}'
+        return [url.format(n) for n in range(1, self.total_pages)]
 
-    with ThreadPoolExecutor(max_workers=20) as executor:
-        tasks = create_tasks(urls)
-        results = executor.map(handler, tasks)
+    def handler(self, url):
+        file_name = url.replace('/', '_').split('.com')[-1][1:]
+        with open(f"{self.path}{file_name}.txt", "w") as file:
+            file.write(self.pageSource(url))
 
-if __name__ == "__main__":
-	main()
+    def run(self):
+        tasks = self.create_tasks()
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            executor.map(self.handler, tasks)
 
-# EOF#
+
+# def main():
+
+#     crawler = Crawler(max_workers = 100,
+#                 path = '/home/finger/Documents/Investing.com-Financial-News',
+#                 url = 'https://www.investing.com/news/economy',
+#                 total_pages = 2926
+#                 )
+#     path = crawler.create_folder(overwrite=True)
+#     crawler.run()
+
+
+# if __name__ == "__main__":
+#     main()
