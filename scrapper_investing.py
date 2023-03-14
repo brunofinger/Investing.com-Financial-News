@@ -83,16 +83,15 @@ class ScrapperInvesting(Scrapper):
 def main() -> None:
     logging.basicConfig(**LOGGER)
 
-    # crawler = Crawler(
-    #     max_workers = 100,
-    #     path = '/home/finger/Documents/Investing.com-Financial-News',
-    #     url = 'https://www.investing.com/news/commodities-news',
-    #     total_pages = 2475
-    # )
+    crawler = Crawler(
+        max_workers = 100,
+        path = '/home/finger/Documents/Investing.com-Financial-News',
+        url = 'https://www.investing.com/news/commodities-news',
+        total_pages = 2475
+    )
 
-    # path = crawler.create_folder(overwrite=True, folder_name='commodities_news')
-    # crawler.run()
-    path = '/home/finger/Documents/Investing.com-Financial-News/commodities_news/'
+    path = crawler.create_folder(overwrite=True, folder_name='commodities_news')
+    crawler.run()
     scrapper = ScrapperInvesting(path)
     tasks = scrapper.create_tasks()
     news = scrapper.extract_info(tasks)

@@ -50,16 +50,3 @@ class Crawler:
             executor.map(self.handler, tasks)
 
 
-# def main():
-
-#     crawler = Crawler(max_workers = 100,
-#                 path = '/home/finger/Documents/Investing.com-Financial-News',
-#                 url = 'https://www.investing.com/news/economy',
-#                 total_pages = 2926
-#                 )
-#     path = crawler.create_folder(overwrite=True)
-#     crawler.run()
-
-
-# if __name__ == "__main__":
-#     main()

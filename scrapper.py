@@ -136,26 +136,4 @@ class ScrapperInvesting(Scrapper):
 
 
 
-# def main() -> None:
-#     logging.basicConfig(**LOGGER)
-
-#     path = '/home/finger/Documents/Investing.com-Financial-News/news_economy_'
-
-#     scrapper = ScrapperInvesting(path)
-#     tasks = scrapper.create_tasks()
-#     news = scrapper.extract_info(tasks)
-
-#     scrapper.download_json(file_name= f'economy_news.json', content=news)
-#     scrapper.download_csv(file_name= f'economy_news', data=news)
-
-#     print('Scrapping completed')
-# if __name__ == "__main__":
-#     main()
-
-# # EOF#
-
-
-
-
-
 
