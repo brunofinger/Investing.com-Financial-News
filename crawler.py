@@ -26,7 +26,7 @@ class Crawler:
             self.path = folder_name
             return folder_name
         else:
-            raise AttributeError('Folder already exits in this path')
+            raise AttributeError('Folder  already exits in this path')
 
     def pageSource(self, url):
         headers={'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:108.0) Gecko/20100101 Firefox/108.0'}
