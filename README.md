@@ -3,8 +3,6 @@
 
 This Python script scrapes the latest financial news articles from Investing.com and stores them in a CSV file.
 
-![Investing.com Financial News Scraper Example](https://chat.openai.com/c/example.png)
-
 ## 🚀 How It Works
 
 The script first fetches the HTML of Investing.com's news page and parses it using Beautiful Soup. It then loops through each article on the page and extracts the title, date, author, and content of the article. 
