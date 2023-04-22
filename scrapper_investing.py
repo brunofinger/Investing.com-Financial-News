@@ -44,6 +44,19 @@ class InvestingNewsScrapper(Scrapper):
         soup = soup.find('div')
         text = soup.find('p').text
         return text.replace('\n', '')
+    
+    def bulk_insert(self, values_list):
+        conn = psycopg2.connect(dbname="mydatabase", user="myusername", password="mypassword", host="localhost", port="5432")
+        cur = conn.cursor()
+        for i in range(0, len(values_list), 10):
+            data = values_list[i:i+10]
+            query = "INSERT INTO mytable (id, url, tag, image, title, text) VALUES %s"
+            args_str = ','.join(cur.mogrify('(%s,%s,%s,%s,%s,%s)', x).decode('utf-8') for x in data)
+            query = query % args_str
+            cur.execute(query)
+        conn.commit()
+        cur.close()
+        conn.close()
 
     def handler(self, file, queue):
         try:
@@ -91,6 +104,8 @@ def main() -> None:
     scrapper.download_json(file_name=f'commodities_news', content=news)
     scrapper.download_csv(file_name=f'commodities_news', data=news)
 
+    scrapper.bulk_insert(news)  # Inserir dados no banco de dados PostgreSQL
+    
     log.info('Scrapping completed')
 
 
