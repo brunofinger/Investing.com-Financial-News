@@ -1,10 +1,7 @@
 import os
-# from multiprocessing import Pool
-# import multiprocessing as mp
-# import json
-# from bs4 import BeautifulSoup
 import logging
 import sys
+from multiprocessing import Pool, cpu_count
 from scrapper import Scrapper
 from crawler import Crawler
 
@@ -12,28 +9,25 @@ from crawler import Crawler
 log = logging.getLogger(__name__)
 
 LOGGER = {
-		'datefmt'  : '%Y-%m-%d %H:%M:%S',
-		'format'   : f'[%(asctime)s.%(msecs)03d]'
-					 f'[%(process)s]'
-				     f'[%(funcName)s:%(lineno)d]'
-				     f'[%(levelname)s]'
-				     f': %(message)s',
-		'level'    : logging.INFO,
-		'stream'   : sys.stdout
+    'datefmt': '%Y-%m-%d %H:%M:%S',
+    'format': f'[%(asctime)s.%(msecs)03d]'
+              f'[%(process)s]'
+              f'[%(funcName)s:%(lineno)d]'
+              f'[%(levelname)s]'
+              f': %(message)s',
+    'level': logging.INFO,
+    'stream': sys.stdout
 }
-CPU_COUNT = (os.cpu_count() // 2) + 1
+
+CPU_COUNT = (cpu_count() // 2) + 1
 
 
-
-class ScrapperInvesting(Scrapper):
-
+class InvestingNewsScrapper(Scrapper):
     def __init__(self, path) -> None:
-        self.path = path if path.endswith('/') else path + '/'
-        # self.investing = ScrapperInvesting
+        self.path = os.path.join(path, '') if not path.endswith('/') else path
         self.base_url = 'https://www.investing.com'
 
     def extract_id(self, soup):
-        # print(soup)
         return soup['data-id']
 
     def extract_image(self, soup):
@@ -44,7 +38,7 @@ class ScrapperInvesting(Scrapper):
         soup = soup.find('div')
         url = soup.find('a')['href']
         title = soup.find('a').text
-        return(url, title)
+        return url, title
 
     def extract_text(self, soup):
         soup = soup.find('div')
@@ -53,8 +47,8 @@ class ScrapperInvesting(Scrapper):
 
     def handler(self, file, queue):
         try:
-            soup = self.open_text_file(self.path+file)
-            soup = soup.find('div', {'class':'largeTitle'})
+            soup = self.open_text_file(os.path.join(self.path, file))
+            soup = soup.find('div', {'class': 'largeTitle'})
             articles = soup.findAll('article')
             for n in articles:
                 try:
@@ -64,12 +58,12 @@ class ScrapperInvesting(Scrapper):
                     id = url.split('-')[-1]
                     text = self.extract_text(n)
 
-                    values = { 'url' : self.base_url+url,
-                            'tag' : 'commodities',
-                            'image' : image_url,
-                            'title' : title,
-                            'text' : text}
-                    print(f"URL: {values['url']}, FILE: {file}")
+                    values = {'url': self.base_url + url,
+                              'tag': 'commodities',
+                              'image': image_url,
+                              'title': title,
+                              'text': text}
+                    log.info(f"URL: {values['url']}, FILE: {file}")
                     queue.put([id, values])
                 except KeyError:
                     pass
@@ -78,35 +72,27 @@ class ScrapperInvesting(Scrapper):
         queue.put(None)
 
 
-
-
 def main() -> None:
     logging.basicConfig(**LOGGER)
 
     crawler = Crawler(
-        max_workers = 100,
-        path = '/home/finger/Documents/Investing.com-Financial-News',
-        url = 'https://www.investing.com/news/commodities-news',
-        total_pages = 2475
+        max_workers=CPU_COUNT,
+        path='/home/finger/Documents/Investing.com-Financial-News',
+        url='https://www.investing.com/news/commodities-news',
+        total_pages=2475
     )
 
     path = crawler.create_folder(overwrite=True, folder_name='commodities_news')
     crawler.run()
-    scrapper = ScrapperInvesting(path)
+    scrapper = InvestingNewsScrapper(path)
     tasks = scrapper.create_tasks()
     news = scrapper.extract_info(tasks)
 
-    scrapper.download_json(file_name= f'commodities_news', content=news)
-    scrapper.download_csv(file_name= f'commodities_news', data=news)
+    scrapper.download_json(file_name=f'commodities_news', content=news)
+    scrapper.download_csv(file_name=f'commodities_news', data=news)
 
-    print('Scrapping completed')
+    log.info('Scrapping completed')
+
+
 if __name__ == "__main__":
     main()
-
-# EOF#
-
-
-
-
-
-
