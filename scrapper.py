@@ -79,59 +79,6 @@ class Scrapper:
             writer.writeheader()
             writer.writerows(values)
 
-    # def download_csv(self,)
-
-class ScrapperInvesting(Scrapper):
-
-    def __init__(self, path) -> None:
-        self.path = path if path.endswith('/') else path + '/'
-        # self.investing = ScrapperInvesting
-        self.base_url = 'https://www.investing.com'
-
-    def extract_id(self, soup):
-        # print(soup)
-        return soup['data-id']
-
-    def extract_image(self, soup):
-        soup = soup.find('a')
-        return soup.find('img')['data-src']
-
-    def extract_title(self, soup):
-        soup = soup.find('div')
-        url = soup.find('a')['href']
-        title = soup.find('a').text
-        return(url, title)
-
-    def extract_text(self, soup):
-        soup = soup.find('div')
-        text = soup.find('p').text
-        return text.replace('\n', '')
-
-    def handler(self, file, queue):
-        try:
-            soup = self.open_text_file(self.path+file)
-            soup = soup.find('div', {'class':'largeTitle'})
-            articles = soup.findAll('article')
-            for n in articles:
-                try:
-                    id = self.extract_id(n)
-                    image_url = self.extract_image(n)
-                    url, title = self.extract_title(n)
-                    id = url.split('-')[-1]
-                    text = self.extract_text(n)
-
-                    values = { 'url' : self.base_url+url,
-                            'tag' : 'economy',
-                            'image' : image_url,
-                            'title' : title,
-                            'text' : text}
-                    print(f"URL: {values['url']}, FILE: {file}")
-                    queue.put([id, values])
-                except KeyError:
-                    pass
-        except AttributeError:
-            pass
-        queue.put(None)
 
 
 
