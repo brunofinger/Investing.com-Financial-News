@@ -1,86 +1,47 @@
-import os
-from multiprocessing import Pool
-import multiprocessing as mp
-import json
 from bs4 import BeautifulSoup
-import logging
-import sys
-import time
-from pprint import pprint
-import csv
+from concurrent.futures import ThreadPoolExecutor
+import os
+import urllib.request
 
-log = logging.getLogger(__name__)
+class Crawler:
 
-LOGGER = {
-		'datefmt'  : '%Y-%m-%d %H:%M:%S',
-		'format'   : f'[%(asctime)s.%(msecs)03d]'
-					 f'[%(process)s]'
-				     f'[%(funcName)s:%(lineno)d]'
-				     f'[%(levelname)s]'
-				     f': %(message)s',
-		'level'    : logging.DEBUG,
-		'stream'   : sys.stdout
-}
-CPU_COUNT = (os.cpu_count() // 2) + 1
+    def __init__(self, url, max_workers, directory_path, total_pages) -> None:
+        self.url = url.strip("/")
+        self.max_workers = max_workers
+        self.directory_path = directory_path.rstrip("/") + "/"
+        self.total_pages = total_pages
 
+    def create_directory(self, overwrite=False, directory_name=None):
+        directory_name = directory_name or self.url.split("/")[-1]
+        directory_path = os.path.join(self.directory_path, directory_name)
+        if os.path.exists(directory_path):
+            if overwrite:
+                self.directory_path = directory_path
+                return directory_path
+            else:
+                raise ValueError("Directory already exists and overwrite is False")
+        os.makedirs(directory_path)
+        self.directory_path = directory_path
+        return directory_path
 
-
-class Scrapper:
-
-    def __init__(self, path) -> None:
-        self.path = path
+    def get_page_source(self, url):
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:108.0) Gecko/20100101 Firefox/108.0'}
+        req = urllib.request.Request(url, headers=headers)
+        res = urllib.request.urlopen(req)
+        print(url, res.getcode())
+        return str(BeautifulSoup(res, "html.parser"))
 
     def create_tasks(self):
-        return os.listdir(self.path)
+        url_template = f"{self.url}/{{}}" if self.url.endswith("/") else f"{self.url}/{{}}"
+        return [url_template.format(n) for n in range(1, self.total_pages + 1)]
 
-    def open_text_file(self, file_txt):
-        with open(file_txt, "r") as file:
-            return BeautifulSoup(file, "html.parser")
+    def save_page_source(self, url):
+        file_name = url.split("/")[-1] + ".txt"
+        file_path = os.path.join(self.directory_path, file_name)
+        with open(file_path, "w") as file:
+            file.write(self.get_page_source(url))
 
-    def handler():
-        pass
-
-    def extract_info(self, tasks):
-        # tasks = self.create_tasks()
-        manager = mp.Manager()
-        queue = manager.Queue()
-        count = len(tasks)
-        data = {}
-
-        with Pool(CPU_COUNT) as pool:
-            pool.starmap(self.handler, [(t, queue) for t in tasks])
-            while count > 0:
-                item = queue.get()
-                if item is None:
-                    count -= 1
-                else:
-                    id, value = item
-                    data[id] = value
-
-        return data #(news, {'total_pages' : len(tasks), 'total_news' : len(news)})
-
-    def download_json(self, file_name, content)-> None:
-        print('Creating json ', file_name)
-        file_name = file_name if file_name.endswith('.json') else file_name + '.json'
-        with open(self.path+file_name, 'w', encoding='utf8') as  file:
-            json.dump(content, file, indent=4)
-
-    def download_csv(self, file_name, data):
-        file_name = file_name if file_name.endswith('.csv') else file_name + '.csv'
-        values = []
-        for k, v in data.items():
-            d = {'id_news': k}
-            d.update(v)
-            values.append(d)
-
-        with open(self.path+file_name, 'w') as csvfile:
-            fields = values[0].keys()
-            writer = csv.DictWriter(csvfile, fieldnames = fields)
-            writer.writeheader()
-            writer.writerows(values)
-
-
-
-
-
-
+    def run(self):
+        tasks = self.create_tasks()
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            executor.map(self.save_page_source, tasks)
