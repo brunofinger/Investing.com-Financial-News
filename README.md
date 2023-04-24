@@ -1,24 +1,20 @@
 
-# 📰 Investing.com Financial News Scraper
+## 📰  Investing.com Financial News Scraper
 
-This Python script scrapes the latest financial news articles from Investing.com and stores them in a CSV file.
+This repository contains a web scraper for financial news from Investing.com, which uses multithreading to download the pages and multiprocessing to extract data from the pages. The scraped data is then stored in a SQL table using bulk insert.
 
-## 🚀 How It Works
+### 🚀 How to use
 
-The script first fetches the HTML of Investing.com's news page and parses it using Beautiful Soup. It then loops through each article on the page and extracts the title, date, author, and content of the article. 
+1.  Clone the repository to your local machine.
+2.  Install the required packages listed in the `requirements.txt` file.
+3.  Set up a SQL database and modify the `config.py` file to include your database credentials.
+4.  Run `crawler.py` to download the web pages and `scrapper.py` to extract the data and store it in the SQL database.
 
-The script cleans the data by removing any unwanted characters and formats it into a CSV file. By default, the script saves the data to a file called `investing_news.csv`. 
+### 📥 Download the data
 
-You can customize the script to scrape news from different categories or regions by changing the URL in the `BASE_URL` variable. You can also modify the script to scrape additional information from the articles or to save the data in a different format. 
+The scraped data can be downloaded from the following Kaggle dataset: [https://www.kaggle.com/datasets/fingerbruno/financial-news-big-data-from-investing-website](https://www.kaggle.com/datasets/fingerbruno/financial-news-big-data-from-investing-website)
 
-## 📝 How To Use
+The dataset contains two tables:
 
-1.  Install the `beautifulsoup4` and `requests` packages by running `pip install beautifulsoup4 requests`.
-2.  Clone this repository or download the `investing_news_scraper.py` file.
-3.  Navigate to the directory containing the `investing_news_scraper.py` file.
-4.  Open a terminal or command prompt and run the script using the command `python investing_news_scraper.py`.
-5.  The script will scrape the latest news articles and save them to a CSV file called `investing_news.csv`.
-6.  Optionally, you can modify the script to scrape news from different categories or regions by changing the URL in the `BASE_URL` variable.
-7.  You can also modify the script to scrape additional information from the articles or to save the data in a different format.
-
-## 📥 Download the Financial News Big Data from Investing dataset from Kaggle [here](https://www.kaggle.com/datasets/fingerbruno/financial-news-big-data-from-investing-website) and start analyzing financial news data today!
+-   `news`: contains information about each news article, including the title, date, and URL.
+-   `articles`: contains the full text of each news article.
